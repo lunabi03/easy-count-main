@@ -11,11 +11,11 @@
    Step 2: API 키 복사
    - Settings → API
    - Project URL 복사
-   - anon public key 복사
+   - anon public key 복사사
 
 2. 환경 변수 설정
    
-   a) .env.local에 추가
+   a) .env.local에 추가 (마우스 오른쪽 클릭 후 파일 생성)
    ```env
    # Supabase
    NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
