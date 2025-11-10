@@ -11,7 +11,7 @@
    Step 2: API 키 복사
    - Settings → API
    - Project URL 복사
-   - anon public key 복사사
+   - anon public key 복사
 
 2. 환경 변수 설정
    
@@ -284,7 +284,180 @@
    }
    ```
 
-7. 헤더에 로그인 상태 표시 (src/components/Header.tsx)
+7. OAuth 제공자 설정 (Google & GitHub)
+
+   Google과 GitHub 로그인을 사용하려면 각 제공자를 설정해야 합니다.
+   
+   **공통 설정 (먼저 수행)**
+   
+   Supabase 대시보드에서:
+   - Authentication → URL Configuration
+   - Site URL: `http://localhost:3000` (개발 환경) 또는 프로덕션 URL
+   - Redirect URLs에 다음 추가:
+     - `http://localhost:3000/auth/callback` (개발 환경)
+     - `https://your-domain.com/auth/callback` (프로덕션 환경)
+   
+   ---
+   
+   **a) Google OAuth 설정**
+   
+   Step 1: Google Cloud Console에서 OAuth 클라이언트 생성
+   
+   1. https://console.cloud.google.com 접속
+   2. 상단 프로젝트 선택 드롭다운에서 프로젝트 선택 (예: "easy-count")
+     - 프로젝트가 없다면 "새 프로젝트"를 생성하세요
+   
+   3. 왼쪽 사이드바(탐색 메뉴)에서 다음 경로를 따라가세요:
+      - **"API 및 서비스"** (또는 "APIs & Services") 클릭
+      - "API 및 서비스" 메뉴가 펼쳐지면 아래 하위 메뉴가 보입니다
+      - 하위 메뉴 중 **"사용자 인증 정보"** (또는 "Credentials") 클릭
+     * 참고: 왼쪽 사이드바에서 "API 및 서비스"를 클릭하면 메인 화면이 표시되고, 
+       그 아래 하위 메뉴에서 "사용자 인증 정보"를 클릭하면 OAuth 설정 페이지로 이동합니다
+   
+   4. 상단 **"+ 사용자 인증 정보 만들기"** (또는 "+ CREATE CREDENTIALS") 버튼 클릭
+   5. 드롭다운 메뉴에서 **"OAuth 클라이언트 ID"** (또는 "OAuth client ID") 선택
+   
+   6. 만약 처음 설정하는 경우, "OAuth 동의 화면 구성" (또는 "Configure consent screen") 메시지가 표시됩니다
+     - **"OAuth 동의 화면 구성"** 버튼 클릭
+     - 사용자 유형: **"외부"** (또는 "External") 선택 → **"만들기"** (또는 "CREATE") 클릭
+     - 앱 정보 입력:
+       * 앱 이름: `Easy Count` (또는 원하는 이름)
+       * 사용자 지원 이메일: 본인 이메일 선택
+       * 앱 로고: 선택사항 (나중에 추가 가능)
+       * 개발자 연락처 정보: 본인 이메일 입력
+     - **"저장 후 계속"** (또는 "SAVE AND CONTINUE") 클릭
+     - 범위(Scopes): 기본값 유지 → **"저장 후 계속"** 클릭
+     - 테스트 사용자: 본인 이메일 추가 (선택사항) → **"저장 후 계속"** 클릭
+     - 요약 확인 → **"대시보드로 돌아가기"** (또는 "BACK TO DASHBOARD") 클릭
+   
+   7. 다시 **"사용자 인증 정보"** 페이지로 돌아가서:
+     - **"+ 사용자 인증 정보 만들기"** → **"OAuth 클라이언트 ID"** 선택
+   
+   8. 애플리케이션 유형: **"웹 애플리케이션"** (또는 "Web application") 선택
+   
+   9. 이름: `Easy Count Web` (또는 원하는 이름) 입력
+   
+   10. 승인된 리디렉션 URI에 다음 추가:
+       - **"+ URI 추가"** (또는 "+ ADD URI") 버튼 클릭
+       - Supabase에서 복사한 Callback URL 입력:
+         ```
+         https://YOUR_PROJECT_ID.supabase.co/auth/v1/callback
+         ```
+         (예: `https://gewhnzsljwravvrxryny.supabase.co/auth/v1/callback`)
+         * YOUR_PROJECT_ID는 Supabase 대시보드 → Settings → API에서 확인 가능
+         * 또는 Supabase의 Google OAuth 설정 페이지에 표시된 "Callback URL"을 그대로 사용
+   
+   11. **"만들기"** (또는 "CREATE") 버튼 클릭
+   
+   12. 팝업 창에 생성된 **Client ID**와 **Client Secret** (클라이언트 보안 비밀번호)이 표시됩니다
+      - **Client ID**: 예) `123456789-abcdefg.apps.googleusercontent.com` 형식의 문자열
+      - **Client Secret**: 예) `GOCSPX-abcdefghijklmnopqrstuvwxyz` 형식의 문자열
+      - 두 값을 모두 복사하여 안전한 곳에 보관하세요
+      - ⚠️ **Client Secret은 한 번만 표시되므로 반드시 복사해두세요!**
+      - 만약 Client Secret을 잃어버렸다면, Google Cloud Console에서 새로운 Secret을 생성해야 합니다
+   
+   Step 2: Supabase에서 Callback URL 확인
+   
+   Google OAuth 설정을 위해 먼저 Supabase의 Callback URL을 확인해야 합니다.
+   
+   1. Supabase 대시보드 접속: https://app.supabase.com
+   2. 프로젝트 선택
+   3. 왼쪽 사이드바에서 **Authentication** 클릭
+   4. 상단 메뉴에서 **Providers** 탭 클릭
+   5. **Google** 제공자 카드 클릭 (또는 "Google" 옆의 설정 아이콘 클릭)
+   6. Google 설정 페이지가 열리면 아래로 스크롤하여 **"Callback URL (for OAuth)"** 섹션 찾기
+   7. Callback URL 필드에 다음과 같은 URL이 표시됩니다:
+      ```
+      https://YOUR_PROJECT_ID.supabase.co/auth/v1/callback
+      ```
+      (예: `https://gewhnzsljwravvrxryny.supabase.co/auth/v1/callback`)
+   8. 이 URL을 복사하거나 오른쪽의 **"Copy"** 버튼을 클릭하여 복사
+   
+   **다른 방법: Settings에서 확인**
+   
+   - Supabase 대시보드 → **Settings** (왼쪽 사이드바 하단)
+   - **API** 메뉴 클릭
+   - **Project URL** 확인 (예: `https://gewhnzsljwravvrxryny.supabase.co`)
+   - Callback URL은 `{Project URL}/auth/v1/callback` 형식입니다
+   
+   ---
+   
+   Step 3: Supabase에 Google OAuth 설정
+   
+   1. Supabase 대시보드 → **Authentication** → **Providers**
+   2. **Google** 선택
+   3. **Enable Sign in with Google** 토글을 **ON**으로 변경
+   4. **Client IDs** 필드에 Google Cloud Console Step 1-12에서 복사한 **Client ID** 입력
+      - 예: `123456789-abcdefg.apps.googleusercontent.com`
+   5. **Client Secret (for OAuth)** 필드에 Google Cloud Console Step 1-12에서 복사한 **Client Secret** (클라이언트 보안 비밀번호) 입력
+      - 예: `GOCSPX-abcdefghijklmnopqrstuvwxyz`
+      - ⚠️ 이것이 Google Cloud Console에서 생성한 "클라이언트 보안 비밀번호"입니다
+   6. **Callback URL (for OAuth)** 필드에 표시된 URL 확인
+      - 이 URL을 Google Cloud Console의 **Authorized redirect URIs**에 정확히 동일하게 입력해야 합니다
+      - URL 끝의 슬래시(/)까지 정확히 일치해야 합니다
+   7. **Save** 버튼 클릭
+   
+   **설정 확인:**
+   - Client IDs: Google Cloud Console에서 복사한 Client ID
+   - Client Secret (for OAuth): Google Cloud Console에서 복사한 Client Secret (클라이언트 보안 비밀번호)
+   - Callback URL: Supabase에서 자동으로 생성된 URL (Step 2에서 확인한 URL)
+   
+   ---
+   
+   **b) GitHub OAuth 설정**
+   
+   Step 1: GitHub에서 OAuth App 생성
+   
+   1. https://github.com 접속 후 로그인
+   2. 우측 상단 프로필 클릭 → **Settings** 클릭
+   3. 왼쪽 메뉴 하단 → **Developer settings** 클릭
+   4. **OAuth Apps** → **New OAuth App** 클릭
+   5. 다음 정보 입력:
+   - **Application name**: `Easy Count` (또는 원하는 이름)
+   - **Homepage URL**: `http://localhost:3000` (개발) 또는 프로덕션 URL
+   - **Authorization callback URL**: 
+     ```
+     https://YOUR_PROJECT_ID.supabase.co/auth/v1/callback
+     ```
+     (YOUR_PROJECT_ID는 Supabase 프로젝트 URL에서 확인 가능)
+   6. **Register application** 클릭
+   7. 생성된 페이지에서 **Client ID**와 **Client Secret** 복사
+      - **Client Secret**은 **Generate a new client secret**을 클릭하여 생성할 수 있습니다
+   
+   Step 2: Supabase에 GitHub OAuth 설정
+   
+   1. Supabase 대시보드 → **Authentication** → **Providers**
+   2. **GitHub** 선택
+   3. **Enable Sign in with GitHub** 토글을 **ON**으로 변경
+   4. **Client ID (for OAuth)** 필드에 Step 1에서 복사한 **Client ID** 입력
+   5. **Client Secret (for OAuth)** 필드에 Step 1에서 복사한 **Client Secret** 입력
+   6. **Callback URL (for OAuth)** 필드에 표시된 URL 확인
+      - 이 URL이 GitHub OAuth App의 **Authorization callback URL**과 일치하는지 확인
+   7. **Save** 버튼 클릭
+   
+   ---
+   
+   **설정 완료 확인**
+   
+   설정이 완료되면:
+   1. 웹사이트의 `/auth` 페이지 접속
+   2. Google 및 GitHub 로그인 버튼이 표시되는지 확인
+   3. 각 버튼을 클릭하여 로그인이 정상적으로 작동하는지 테스트
+   
+   **문제 해결**
+   
+   - "redirect_uri_mismatch" 에러: 
+     * Google Cloud Console 또는 GitHub OAuth App의 리디렉션 URI가 Supabase의 Callback URL과 정확히 일치하는지 확인
+     * 공백이나 슬래시(/) 하나 차이도 오류를 발생시킬 수 있습니다
+   
+   - "invalid_client" 에러:
+     * Client ID와 Client Secret이 정확하게 입력되었는지 확인
+     * Client Secret이 만료되지 않았는지 확인 (GitHub의 경우)
+   
+   - 로그인 후 에러 페이지로 이동:
+     * Supabase의 Site URL과 Redirect URLs이 올바르게 설정되었는지 확인
+
+8. 헤더에 로그인 상태 표시 (src/components/Header.tsx)
    ```typescript
    'use client'
    
@@ -344,7 +517,7 @@
    }
    ```
 
-8. 계산 기록 저장/조회 함수 (src/lib/database/calculations.ts)
+9. 계산 기록 저장/조회 함수 (src/lib/database/calculations.ts)
    ```typescript
    import { createClient } from '@/lib/supabase/client'
    
@@ -408,7 +581,7 @@
    }
    ```
 
-9. 기록 페이지 (src/app/history/page.tsx)
+10. 기록 페이지 (src/app/history/page.tsx)
    ```typescript
    'use client'
    
@@ -502,7 +675,7 @@
    }
    ```
 
-10. 계산기에 저장 기능 추가
+11. 계산기에 저장 기능 추가
     
     예: 디데이 계산기에 저장 버튼 추가
     ```typescript
