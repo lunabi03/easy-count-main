@@ -1,4 +1,4 @@
-import type { BMIResult } from '@/types'
+import type { BMIResult, CalorieResult } from '@/types'
 
 export function calculateBMI(height: number, weight: number): BMIResult {
   // height는 cm, weight는 kg
@@ -50,6 +50,84 @@ export function calculateBMI(height: number, weight: number): BMIResult {
     status,
     healthyWeightRange,
     weightDifference,
+    recommendation,
+  }
+}
+
+// 기초대사량(BMR) 계산 (Mifflin-St Jeor 공식)
+export function calculateBMR(
+  gender: 'male' | 'female',
+  weight: number,
+  height: number,
+  age: number
+): number {
+  // weight는 kg, height는 cm
+  if (gender === 'male') {
+    return 10 * weight + 6.25 * height - 5 * age + 5
+  } else {
+    return 10 * weight + 6.25 * height - 5 * age - 161
+  }
+}
+
+// 활동대사량(TDEE) 계산
+export function calculateTDEE(
+  bmr: number,
+  activityLevel: 'sedentary' | 'light' | 'moderate' | 'active' | 'veryActive'
+): number {
+  const activityMultipliers = {
+    sedentary: 1.2,    // 거의 운동 안 함
+    light: 1.375,      // 가벼운 운동 (주 1-3일)
+    moderate: 1.55,    // 적당한 운동 (주 3-5일)
+    active: 1.725,     // 적극적인 운동 (주 6-7일)
+    veryActive: 1.9,   // 매우 적극적인 운동 (하루 2회 이상)
+  }
+  
+  return bmr * activityMultipliers[activityLevel]
+}
+
+// 칼로리 계산 (BMR, TDEE, 목표 칼로리)
+export function calculateCalories(
+  gender: 'male' | 'female',
+  weight: number,
+  height: number,
+  age: number,
+  activityLevel: 'sedentary' | 'light' | 'moderate' | 'active' | 'veryActive'
+): CalorieResult {
+  const bmr = calculateBMR(gender, weight, height, age)
+  const tdee = calculateTDEE(bmr, activityLevel)
+  
+  const activityLabels = {
+    sedentary: '거의 운동 안 함',
+    light: '가벼운 운동 (주 1-3일)',
+    moderate: '적당한 운동 (주 3-5일)',
+    active: '적극적인 운동 (주 6-7일)',
+    veryActive: '매우 적극적인 운동 (하루 2회 이상)',
+  }
+  
+  // 목표 칼로리 계산
+  // 체중 유지: TDEE
+  // 체중 감량: TDEE - 500kcal (주당 0.5kg 감량)
+  // 체중 증량: TDEE + 500kcal (주당 0.5kg 증량)
+  const goalCalories = {
+    maintain: Math.round(tdee),
+    loseWeight: Math.round(tdee - 500),
+    gainWeight: Math.round(tdee + 500),
+  }
+  
+  let recommendation = ''
+  if (goalCalories.loseWeight < 1200) {
+    recommendation = '⚠️ 체중 감량 목표 칼로리가 너무 낮습니다. 건강한 감량을 위해 전문가와 상담하세요.'
+  } else if (goalCalories.gainWeight > 4000) {
+    recommendation = '⚠️ 체중 증량 목표 칼로리가 매우 높습니다. 점진적으로 증가시키는 것을 권장합니다.'
+  } else {
+    recommendation = '균형잡힌 식사와 규칙적인 운동으로 목표를 달성하세요!'
+  }
+  
+  return {
+    bmr: Math.round(bmr),
+    tdee: Math.round(tdee),
+    activityLevel: activityLabels[activityLevel],
+    goalCalories,
     recommendation,
   }
 }

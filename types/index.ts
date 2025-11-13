@@ -88,3 +88,42 @@ export interface GPAResult {
   letterGrade: string;
 }
 
+// 칼로리 계산 결과 타입
+export interface CalorieResult {
+  bmr: number;
+  tdee: number;
+  activityLevel: string;
+  goalCalories: {
+    maintain: number;
+    loseWeight: number;
+    gainWeight: number;
+  };
+  recommendation: string;
+}
+
+// 운동 계산 결과 타입
+export interface ExerciseResult {
+  exerciseType: string;
+  caloriesBurned: number;
+  speed?: number;
+  distance?: number;
+  duration?: number;
+  metValue: number;
+  targetDuration?: number;
+}
+
+// 크롤링 데이터 타입
+export interface SuperKTSData {
+  category: string;
+  title: string;
+  url: string;
+  description?: string;
+  lastUpdated?: Date;
+}
+
+export interface CrawledData {
+  date: string;
+  data: SuperKTSData[];
+  timestamp: Date;
+}
+

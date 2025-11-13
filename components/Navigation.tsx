@@ -13,7 +13,10 @@ export default function Navigation() {
     { href: '/salary', label: '연봉' },
     { href: '/shopping', label: '쇼핑' },
     { href: '/health/bmi', label: 'BMI' },
+    { href: '/health/calorie', label: '칼로리' },
+    { href: '/health/exercise', label: '운동' },
     { href: '/academic/gpa', label: 'GPA' },
+    { href: '/data', label: '데이터' },
   ]
   
   return (

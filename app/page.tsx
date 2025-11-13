@@ -37,6 +37,24 @@ export default function Home() {
       description: 'GPA 평점 계산',
       href: '/academic/gpa',
       color: 'bg-indigo-500'
+    },
+    {
+      title: '🔥 칼로리 계산기',
+      description: '기초대사량, 활동대사량 계산',
+      href: '/health/calorie',
+      color: 'bg-red-500'
+    },
+    {
+      title: '🏃 운동 계산기',
+      description: '칼로리 소모량, 운동 시간 계산',
+      href: '/health/exercise',
+      color: 'bg-teal-500'
+    },
+    {
+      title: '📊 수집 데이터',
+      description: 'superkts.com 데이터 수집 현황',
+      href: '/data',
+      color: 'bg-yellow-500'
     }
   ]
 

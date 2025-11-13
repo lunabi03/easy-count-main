@@ -296,7 +296,7 @@
    - Redirect URLs에 다음 추가:
      - `http://localhost:3000/auth/callback` (개발 환경)
      - `https://your-domain.com/auth/callback` (프로덕션 환경)
-   
+   버셀 도메인 주소를 넣는다  (예시:https://easy-count-main.vercel.app)
    ---
    
    **a) Google OAuth 설정**
